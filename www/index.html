@@ -4,8 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Subway Surfers 3D Arcade</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Three.js CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -23,9 +26,6 @@
     }
     .arcade-font {
       font-family: 'Press Start 2P', monospace;
-    }
-    .glow-gold {
-      box-shadow: 0 0 25px rgba(234, 179, 8, 0.4);
     }
     .glow-cyan {
       box-shadow: 0 0 25px rgba(6, 182, 212, 0.4);
@@ -56,16 +56,19 @@
 
     <!-- Live Running Metrics -->
     <div class="flex items-center gap-3 sm:gap-6 text-xs">
+      <!-- Coin Counter -->
       <div class="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-xl">
         <span class="text-sm">🪙</span>
         <span id="coinCountDisplay" class="arcade-font text-yellow-400 text-xs sm:text-sm">0</span>
       </div>
 
+      <!-- Distance Meter -->
       <div class="flex flex-col items-center">
         <span class="text-[9px] text-slate-400 uppercase tracking-widest">Score / Dist</span>
         <span id="scoreDisplay" class="arcade-font text-cyan-400 text-xs sm:text-sm">0m</span>
       </div>
 
+      <!-- Multiplier -->
       <div class="flex flex-col items-center">
         <span class="text-[9px] text-slate-400 uppercase tracking-widest">Speed</span>
         <span id="speedDisplay" class="arcade-font text-emerald-400 text-xs sm:text-sm">1.0x</span>
@@ -74,6 +77,7 @@
 
     <!-- Actions Tray -->
     <div class="flex items-center gap-1.5">
+      <!-- Sound Switch -->
       <button id="soundToggleBtn" aria-label="Toggle Sound" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 transition">
         <svg id="soundOnIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
@@ -84,12 +88,14 @@
         </svg>
       </button>
 
+      <!-- Shop -->
       <button id="shopBtn" aria-label="Shop & Characters" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-amber-400 transition">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
         </svg>
       </button>
 
+      <!-- Settings -->
       <button id="settingsBtn" aria-label="Settings" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 transition">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -99,11 +105,12 @@
     </div>
   </header>
 
-  <!-- Main Viewport -->
+  <!-- Main 3D Canvas Viewport -->
   <main class="relative flex-1 w-full max-w-2xl flex flex-col justify-center items-center my-1.5">
     <div id="gameContainer" class="relative rounded-2xl overflow-hidden border-2 border-slate-800 bg-slate-900 shadow-2xl glow-cyan transition-all duration-300 w-full flex items-center justify-center aspect-[9/14] sm:aspect-[3/4]">
       <div id="canvas3d" class="absolute inset-0 w-full h-full"></div>
       <div id="activeBuffBar" class="absolute top-3 left-3 right-3 flex flex-col gap-1.5 pointer-events-none z-10"></div>
+
       <div id="hoverboardBadge" class="hidden absolute top-3 right-3 bg-cyan-500/20 border border-cyan-400/60 text-cyan-300 px-2.5 py-1 rounded-xl text-[10px] font-bold arcade-font items-center gap-1.5 animate-pulse z-10">
         🛹 BOARD READY
       </div>
@@ -111,12 +118,10 @@
       <!-- Start Overlay -->
       <div id="startOverlay" class="absolute inset-0 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center z-20 transition-opacity duration-200">
         <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 p-0.5 shadow-lg shadow-amber-500/20 mb-3 flex items-center justify-center">
-          <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-2xl">
-            🏃💨
-          </div>
+          <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-2xl">🏃💨</div>
         </div>
         <h2 class="arcade-font text-base sm:text-lg text-amber-400 mb-1 tracking-wider">SUBWAY RUNNER 3D</h2>
-        <p class="text-xs text-slate-400 max-w-xs mb-4">Dodge oncoming trains, leap over barricades, slide under hurdles & gather shiny coins!</p>
+        <p class="text-xs text-slate-400 max-w-xs mb-4">Dodge oncoming trains, leap over barricades, slide under hurdles & collect coins!</p>
         
         <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 w-full max-w-xs text-left mb-4 text-[11px] text-slate-300">
           <div class="flex justify-between py-1 border-b border-slate-800">
@@ -150,9 +155,7 @@
 
       <!-- Game Over Overlay -->
       <div id="gameOverOverlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md hidden flex-col items-center justify-center p-4 text-center z-20">
-        <div class="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mb-2 text-rose-500 text-2xl">
-          💥
-        </div>
+        <div class="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mb-2 text-rose-500 text-2xl">💥</div>
         <h2 class="arcade-font text-sm sm:text-base text-rose-500 mb-1 tracking-wider">BUSTED!</h2>
         <p id="deathReasonText" class="text-xs text-slate-400 mb-3">You crashed into a subway freight car.</p>
 
@@ -187,7 +190,7 @@
     </div>
   </main>
 
-  <!-- Modals -->
+  <!-- Shop Modal -->
   <div id="shopModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 w-full max-w-sm max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl">
       <div class="flex justify-between items-center mb-3">
@@ -210,13 +213,15 @@
     </div>
   </div>
 
+  <!-- Settings & Custom Audio Center Modal -->
   <div id="settingsModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 w-full max-w-sm max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl">
       <div class="flex justify-between items-center mb-3">
-        <h3 class="arcade-font text-xs text-cyan-400">GAME SETTINGS</h3>
+        <h3 class="arcade-font text-xs text-cyan-400">AUDIO & SETTINGS</h3>
         <button id="closeSettingsBtn" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
       </div>
 
+      <!-- Graphics -->
       <div class="flex items-center justify-between py-2 border-b border-slate-800">
         <div>
           <div class="text-xs font-semibold text-slate-200">Dynamic Shadows</div>
@@ -225,19 +230,30 @@
         <input id="shadowsToggle" type="checkbox" checked class="w-4 h-4 accent-cyan-500 rounded bg-slate-800 cursor-pointer" />
       </div>
 
+      <!-- Custom Audio File Pickers -->
       <div class="py-2.5 border-b border-slate-800">
-        <label class="block text-xs font-semibold text-slate-200 mb-1">Camera Distance</label>
-        <input id="fovRange" type="range" min="55" max="75" value="65" class="w-full accent-cyan-500 bg-slate-800 cursor-pointer" />
+        <label class="block text-xs font-semibold text-amber-400 mb-1">🎵 Background Music (BGM)</label>
+        <input id="bgmFileInput" type="file" accept="audio/*" class="w-full text-[10px] text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:bg-slate-800 file:text-cyan-400 file:cursor-pointer" />
       </div>
 
       <div class="py-2.5 border-b border-slate-800">
-        <label class="block text-xs font-semibold text-amber-400 mb-1">Custom Background Song</label>
-        <input id="bgmFileInput" type="file" accept="audio/*" class="text-[10px] text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:bg-slate-800 file:text-cyan-400 file:cursor-pointer" />
+        <label class="block text-xs font-semibold text-emerald-400 mb-1">🦘 Custom Jump Sound</label>
+        <input id="jumpFileInput" type="file" accept="audio/*" class="w-full text-[10px] text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:bg-slate-800 file:text-emerald-400 file:cursor-pointer" />
       </div>
 
       <div class="py-2.5 border-b border-slate-800">
-        <label class="block text-xs font-semibold text-rose-400 mb-1">Custom Game Over Sound</label>
-        <input id="deathFileInput" type="file" accept="audio/*" class="text-[10px] text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:bg-slate-800 file:text-rose-400 file:cursor-pointer" />
+        <label class="block text-xs font-semibold text-purple-400 mb-1">⚡ Custom Powerup Sound</label>
+        <input id="powerupFileInput" type="file" accept="audio/*" class="w-full text-[10px] text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:bg-slate-800 file:text-purple-400 file:cursor-pointer" />
+      </div>
+
+      <div class="py-2.5 border-b border-slate-800">
+        <label class="block text-xs font-semibold text-yellow-400 mb-1">🪙 Custom Coin Sound</label>
+        <input id="coinFileInput" type="file" accept="audio/*" class="w-full text-[10px] text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:bg-slate-800 file:text-yellow-400 file:cursor-pointer" />
+      </div>
+
+      <div class="py-2.5 border-b border-slate-800">
+        <label class="block text-xs font-semibold text-rose-400 mb-1">💥 Custom Crash/Death Sound</label>
+        <input id="deathFileInput" type="file" accept="audio/*" class="w-full text-[10px] text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:bg-slate-800 file:text-rose-400 file:cursor-pointer" />
       </div>
 
       <button id="saveSettingsBtn" class="w-full mt-4 arcade-font text-xs py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition">
@@ -247,19 +263,30 @@
   </div>
 
   <script>
+    // --- Audio System with Dedicated File Playback & Synthetic Web Audio Fallback ---
     class SoundFX {
       constructor() {
         this.ctx = null;
         this.muted = false;
 
-        // Custom External/File BGM URL
-        this.bgmAudio = new Audio('https://cdn.freesound.org/previews/456/456565_5121236-lq.mp3');
+        // Custom URLs (You can replace any URL with your own hosted assets)
+        this.tracks = {
+          bgm: 'https://cdn.freesound.org/previews/456/456565_5121236-lq.mp3',
+          jump: 'https://cdn.freesound.org/previews/274/274178_5121236-lq.mp3',
+          powerup: 'https://cdn.freesound.org/previews/274/274182_5121236-lq.mp3',
+          coin: 'https://cdn.freesound.org/previews/341/341695_5858296-lq.mp3',
+          death: 'https://cdn.freesound.org/previews/173/173126_321967-lq.mp3'
+        };
+
+        this.bgmAudio = new Audio(this.tracks.bgm);
         this.bgmAudio.loop = true;
         this.bgmAudio.volume = 0.35;
         this.bgmAudio.crossOrigin = 'anonymous';
 
-        this.coinAudio = new Audio();
-        this.deathAudio = new Audio();
+        this.jumpAudio = new Audio(this.tracks.jump);
+        this.powerupAudio = new Audio(this.tracks.powerup);
+        this.coinAudio = new Audio(this.tracks.coin);
+        this.deathAudio = new Audio(this.tracks.death);
 
         this.synthBgmInterval = null;
         this.isSynthBgmRunning = false;
@@ -291,15 +318,26 @@
         } catch(e) {}
       }
 
-      // Starts external BGM with fallback to a synthesized rhythmic chiptune loop
+      playAudioElement(audioObj, fallbackFn) {
+        if (this.muted) return;
+        try {
+          const clone = audioObj.cloneNode();
+          clone.volume = audioObj.volume || 0.5;
+          const p = clone.play();
+          if (p !== undefined) {
+            p.catch(() => { if (fallbackFn) fallbackFn(); });
+          }
+        } catch(e) {
+          if (fallbackFn) fallbackFn();
+        }
+      }
+
       playBGM() {
         if (this.muted) return;
         try {
           const p = this.bgmAudio.play();
           if (p !== undefined) {
-            p.catch(() => {
-              this.startSynthBGM();
-            });
+            p.catch(() => this.startSynthBGM());
           }
         } catch(e) {
           this.startSynthBGM();
@@ -341,8 +379,10 @@
       }
 
       jump() {
-        this.playTone(320, 'triangle', 0.1, 0.2);
-        setTimeout(() => this.playTone(560, 'sine', 0.12, 0.2), 40);
+        this.playAudioElement(this.jumpAudio, () => {
+          this.playTone(320, 'triangle', 0.1, 0.2);
+          setTimeout(() => this.playTone(560, 'sine', 0.12, 0.2), 40);
+        });
       }
 
       slide() {
@@ -354,14 +394,17 @@
       }
 
       coin() {
-        if (this.muted) return;
-        this.playTone(980, 'sine', 0.06, 0.18);
-        setTimeout(() => this.playTone(1320, 'sine', 0.08, 0.2), 30);
+        this.playAudioElement(this.coinAudio, () => {
+          this.playTone(980, 'sine', 0.06, 0.18);
+          setTimeout(() => this.playTone(1320, 'sine', 0.08, 0.2), 30);
+        });
       }
 
       powerup() {
-        [440, 554, 659, 880, 1108].forEach((freq, idx) => {
-          setTimeout(() => this.playTone(freq, 'triangle', 0.08, 0.18), idx * 45);
+        this.playAudioElement(this.powerupAudio, () => {
+          [440, 554, 659, 880, 1108].forEach((freq, idx) => {
+            setTimeout(() => this.playTone(freq, 'triangle', 0.08, 0.18), idx * 45);
+          });
         });
       }
 
@@ -378,8 +421,10 @@
       crash() {
         if (this.muted) return;
         this.pauseBGM();
-        this.playTone(150, 'sawtooth', 0.3, 0.4);
-        setTimeout(() => this.playTone(80, 'sawtooth', 0.4, 0.45), 90);
+        this.playAudioElement(this.deathAudio, () => {
+          this.playTone(150, 'sawtooth', 0.3, 0.4);
+          setTimeout(() => this.playTone(80, 'sawtooth', 0.4, 0.45), 90);
+        });
       }
 
       vibrate(ms = 35) {
@@ -391,6 +436,7 @@
 
     const sfx = new SoundFX();
 
+    // Catalog & Game Parameters
     const CHARACTERS = [
       { id: 'jake', name: 'Jake Classic', color: '#06b6d4', hoodie: '#3b82f6', price: 0, unlocked: true },
       { id: 'tricky', name: 'Tricky Rebel', color: '#ec4899', hoodie: '#f43f5e', price: 50, unlocked: false },
@@ -1158,9 +1204,7 @@
           card.className = `flex items-center justify-between p-2.5 rounded-xl border transition ${isSelected ? 'bg-amber-500/10 border-amber-500/50' : 'bg-slate-800/60 border-slate-700/60'}`;
           card.innerHTML = `
             <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-slate-950 text-xs shadow" style="background-color: ${char.color}">
-                🏃
-              </div>
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-slate-950 text-xs shadow" style="background-color: ${char.color}">🏃</div>
               <div>
                 <div class="text-xs font-bold text-slate-200">${char.name}</div>
                 <div class="text-[10px] text-slate-400">${char.unlocked ? 'Unlocked' : `🪙 ${char.price} Coins`}</div>
@@ -1184,9 +1228,7 @@
           card.className = `flex items-center justify-between p-2.5 rounded-xl border transition ${isSelected ? 'bg-cyan-500/10 border-cyan-500/50' : 'bg-slate-800/60 border-slate-700/60'}`;
           card.innerHTML = `
             <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-slate-950 text-xs shadow" style="background-color: ${board.color}">
-                🛹
-              </div>
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-slate-950 text-xs shadow" style="background-color: ${board.color}">🛹</div>
               <div>
                 <div class="text-xs font-bold text-slate-200">${board.name}</div>
                 <div class="text-[10px] text-slate-400">${board.unlocked ? 'Unlocked' : `🪙 ${board.price} Coins`}</div>
@@ -1388,34 +1430,31 @@
         });
         document.getElementById('saveSettingsBtn').addEventListener('click', () => {
           const shadows = document.getElementById('shadowsToggle').checked;
-          const fov = parseInt(document.getElementById('fovRange').value, 10);
           this.dirLight.castShadow = shadows;
-          this.camera.fov = fov;
-          this.camera.updateProjectionMatrix();
           settingsModal.classList.add('hidden');
           settingsModal.classList.remove('flex');
         });
 
-        document.getElementById('bgmFileInput').addEventListener('change', (e) => {
-          const file = e.target.files[0];
-          if (file) {
-            const url = URL.createObjectURL(file);
-            sfx.bgmAudio.src = url;
-            sfx.bgmAudio.load();
-            if (this.isPlaying && !this.isPaused && !sfx.muted) {
-              sfx.playBGM();
+        // Dynamic Audio Upload Listeners
+        const bindFileAudio = (elemId, audioTarget, isLoop = false) => {
+          document.getElementById(elemId).addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+              const url = URL.createObjectURL(file);
+              audioTarget.src = url;
+              audioTarget.load();
+              if (isLoop && this.isPlaying && !this.isPaused && !sfx.muted) {
+                sfx.playBGM();
+              }
             }
-          }
-        });
+          });
+        };
 
-        document.getElementById('deathFileInput').addEventListener('change', (e) => {
-          const file = e.target.files[0];
-          if (file) {
-            const url = URL.createObjectURL(file);
-            sfx.deathAudio.src = url;
-            sfx.deathAudio.load();
-          }
-        });
+        bindFileAudio('bgmFileInput', sfx.bgmAudio, true);
+        bindFileAudio('jumpFileInput', sfx.jumpAudio);
+        bindFileAudio('powerupFileInput', sfx.powerupAudio);
+        bindFileAudio('coinFileInput', sfx.coinAudio);
+        bindFileAudio('deathFileInput', sfx.deathAudio);
 
         window.addEventListener('resize', () => {
           const w = this.container.clientWidth;
