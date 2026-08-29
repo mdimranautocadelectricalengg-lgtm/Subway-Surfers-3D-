@@ -231,45 +231,45 @@
     </div>
   </div>
 
-<!-- Settings Modal with Custom Audio Selectors -->
-<div id="settingsModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
-  <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 w-full max-w-sm max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl">
-    <div class="flex justify-between items-center mb-3">
-      <h3 class="arcade-font text-xs text-cyan-400">GAME SETTINGS</h3>
-      <button id="closeSettingsBtn" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
-    </div>
-
-    <!-- Graphics -->
-    <div class="flex items-center justify-between py-2 border-b border-slate-800">
-      <div>
-        <div class="text-xs font-semibold text-slate-200">Dynamic Shadows</div>
-        <div class="text-[10px] text-slate-400">High fidelity lighting</div>
+  <!-- Settings Modal with Custom Audio Selectors -->
+  <div id="settingsModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-3 z-50">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 w-full max-w-sm max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="arcade-font text-xs text-cyan-400">GAME SETTINGS</h3>
+        <button id="closeSettingsBtn" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
       </div>
-      <input id="shadowsToggle" type="checkbox" checked class="w-4 h-4 accent-cyan-500 rounded bg-slate-800 cursor-pointer" />
-    </div>
 
-    <!-- Camera FOV -->
-    <div class="py-2.5 border-b border-slate-800">
-      <label class="block text-xs font-semibold text-slate-200 mb-1">Camera Distance</label>
-      <input id="fovRange" type="range" min="55" max="75" value="65" class="w-full accent-cyan-500 bg-slate-800 cursor-pointer" />
-    </div>
+      <!-- Graphics -->
+      <div class="flex items-center justify-between py-2 border-b border-slate-800">
+        <div>
+          <div class="text-xs font-semibold text-slate-200">Dynamic Shadows</div>
+          <div class="text-[10px] text-slate-400">High fidelity lighting</div>
+        </div>
+        <input id="shadowsToggle" type="checkbox" checked class="w-4 h-4 accent-cyan-500 rounded bg-slate-800 cursor-pointer" />
+      </div>
 
-    <!-- Audio Uploads -->
-    <div class="py-2.5 border-b border-slate-800">
-      <label class="block text-xs font-semibold text-amber-400 mb-1">Custom Background Song</label>
-      <input id="bgmFileInput" type="file" accept="audio/*" class="text-[10px] text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:bg-slate-800 file:text-cyan-400 file:cursor-pointer" />
-    </div>
+      <!-- Camera FOV -->
+      <div class="py-2.5 border-b border-slate-800">
+        <label class="block text-xs font-semibold text-slate-200 mb-1">Camera Distance</label>
+        <input id="fovRange" type="range" min="55" max="75" value="65" class="w-full accent-cyan-500 bg-slate-800 cursor-pointer" />
+      </div>
 
-    <div class="py-2.5 border-b border-slate-800">
-      <label class="block text-xs font-semibold text-rose-400 mb-1">Custom Game Over Sound</label>
-      <input id="deathFileInput" type="file" accept="audio/*" class="text-[10px] text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:bg-slate-800 file:text-rose-400 file:cursor-pointer" />
-    </div>
+      <!-- Audio Uploads -->
+      <div class="py-2.5 border-b border-slate-800">
+        <label class="block text-xs font-semibold text-amber-400 mb-1">Custom Background Song</label>
+        <input id="bgmFileInput" type="file" accept="audio/*" class="text-[10px] text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:bg-slate-800 file:text-cyan-400 file:cursor-pointer" />
+      </div>
 
-    <button id="saveSettingsBtn" class="w-full mt-4 arcade-font text-xs py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition">
-      SAVE SETTINGS
-    </button>
+      <div class="py-2.5 border-b border-slate-800">
+        <label class="block text-xs font-semibold text-rose-400 mb-1">Custom Game Over Sound</label>
+        <input id="deathFileInput" type="file" accept="audio/*" class="text-[10px] text-slate-300 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:bg-slate-800 file:text-rose-400 file:cursor-pointer" />
+      </div>
+
+      <button id="saveSettingsBtn" class="w-full mt-4 arcade-font text-xs py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition">
+        SAVE SETTINGS
+      </button>
+    </div>
   </div>
-</div>
 
   <script>
     // --- Audio System with Custom File Playback & Web Audio Fallback ---
@@ -1482,6 +1482,29 @@
           settingsModal.classList.remove('flex');
         });
 
+        // Custom BGM file upload
+        document.getElementById('bgmFileInput').addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const url = URL.createObjectURL(file);
+            sfx.bgmAudio.src = url;
+            sfx.bgmAudio.load();
+            if (this.isPlaying && !this.isPaused && !sfx.muted) {
+              sfx.playBGM();
+            }
+          }
+        });
+
+        // Custom Game Over sound upload
+        document.getElementById('deathFileInput').addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const url = URL.createObjectURL(file);
+            sfx.deathAudio.src = url;
+            sfx.deathAudio.load();
+          }
+        });
+
         // Responsive Resize
         window.addEventListener('resize', () => {
           const w = this.container.clientWidth;
@@ -1508,4 +1531,3 @@
   </script>
 </body>
 </html>
-
