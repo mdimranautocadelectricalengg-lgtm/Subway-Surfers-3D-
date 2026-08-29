@@ -1,0 +1,6 @@
+{
+  "appId": "com.subway.arcade3d",
+  "appName": "SubwaySurfers3D",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
