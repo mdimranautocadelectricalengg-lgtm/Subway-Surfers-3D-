@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Subway Surfers 3D Arcade</title>
+  <title>Subway Runner 3D — High Quality Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,6 +40,16 @@
       background: #334155;
       border-radius: 9999px;
     }
+    #gameContainer::after {
+      content: ''; position:absolute; inset:0; pointer-events:none; z-index:8;
+      background: radial-gradient(circle at 50% 45%, transparent 45%, rgba(0,0,0,.38) 100%);
+      mix-blend-mode:multiply;
+    }
+    .speed-lines { position:absolute; inset:0; pointer-events:none; z-index:7; overflow:hidden; opacity:0; transition:opacity .25s; }
+    .speed-lines::before,.speed-lines::after { content:''; position:absolute; inset:-20%; background:repeating-linear-gradient(90deg, transparent 0 7%, rgba(255,255,255,.08) 7.2% 7.5%, transparent 7.7% 15%); transform:skewX(-18deg); animation:speedRush .45s linear infinite; }
+    .speed-lines::after { animation-duration:.7s; opacity:.45; transform:skewX(18deg) scale(1.2); }
+    @keyframes speedRush { from { transform:translateX(-12%) skewX(-18deg); } to { transform:translateX(12%) skewX(-18deg); } }
+    .cinematic-badge { text-shadow:0 0 12px currentColor; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 flex flex-col justify-between items-center h-full w-full p-2 sm:p-3 select-none">
@@ -103,7 +113,16 @@
   <main class="relative flex-1 w-full max-w-2xl flex flex-col justify-center items-center my-1.5">
     <div id="gameContainer" class="relative rounded-2xl overflow-hidden border-2 border-slate-800 bg-slate-900 shadow-2xl glow-cyan transition-all duration-300 w-full flex items-center justify-center aspect-[9/14] sm:aspect-[3/4]">
       <div id="canvas3d" class="absolute inset-0 w-full h-full"></div>
+      <div id="speedLines" class="speed-lines"></div>
       <div id="activeBuffBar" class="absolute top-3 left-3 right-3 flex flex-col gap-1.5 pointer-events-none z-10"></div>
+      <div class="absolute bottom-3 left-3 right-3 z-10 pointer-events-none">
+        <div class="flex items-center justify-between text-[9px] font-bold uppercase tracking-widest text-slate-300 mb-1">
+          <span>🚨 Inspector Chase</span><span id="chaseText">READY</span>
+        </div>
+        <div class="h-1.5 rounded-full bg-slate-950/70 border border-slate-700 overflow-hidden">
+          <div id="chaseBar" class="h-full w-0 bg-gradient-to-r from-emerald-400 via-yellow-400 to-rose-500 transition-all"></div>
+        </div>
+      </div>
       <div id="hoverboardBadge" class="hidden absolute top-3 right-3 bg-cyan-500/20 border border-cyan-400/60 text-cyan-300 px-2.5 py-1 rounded-xl text-[10px] font-bold arcade-font items-center gap-1.5 animate-pulse z-10">
         🛹 BOARD READY
       </div>
@@ -252,6 +271,7 @@
         this.ctx = null;
         this.muted = false;
 
+        // Custom External/File BGM URL
         this.bgmAudio = new Audio('https://cdn.freesound.org/previews/456/456565_5121236-lq.mp3');
         this.bgmAudio.loop = true;
         this.bgmAudio.volume = 0.35;
@@ -290,6 +310,7 @@
         } catch(e) {}
       }
 
+      // Starts external BGM with fallback to a synthesized rhythmic chiptune loop
       playBGM() {
         if (this.muted) return;
         try {
@@ -390,10 +411,10 @@
     const sfx = new SoundFX();
 
     const CHARACTERS = [
-      { id: 'custom_bot', name: 'Imran Custom', color: '#facc15', hoodie: '#e5e7eb', price: 0, unlocked: true },
-      { id: 'jake', name: 'Jake Classic', color: '#06b6d4', hoodie: '#3b82f6', price: 50, unlocked: false },
-      { id: 'tricky', name: 'Tricky Rebel', color: '#ec4899', hoodie: '#f43f5e', price: 100, unlocked: false },
-      { id: 'ninja', name: 'Shadow Ninja', color: '#10b981', hoodie: '#1e293b', price: 150, unlocked: false }
+      { id: 'jake', name: 'Jake Classic', color: '#06b6d4', hoodie: '#3b82f6', price: 0, unlocked: true },
+      { id: 'tricky', name: 'Tricky Rebel', color: '#ec4899', hoodie: '#f43f5e', price: 50, unlocked: false },
+      { id: 'ninja', name: 'Shadow Ninja', color: '#10b981', hoodie: '#1e293b', price: 120, unlocked: false },
+      { id: 'cyber', name: 'Cyberpunk Bot', color: '#facc15', hoodie: '#8b5cf6', price: 200, unlocked: false }
     ];
 
     const BOARDS = [
@@ -416,7 +437,7 @@
 
         this.coinsWallet = 0;
         this.highScore = 0;
-        this.selectedCharacter = 'custom_bot';
+        this.selectedCharacter = 'jake';
         this.selectedBoard = 'standard';
         this.loadSessionData();
 
@@ -431,7 +452,6 @@
         this.targetX = 0;
 
         this.player = null;
-        this.playerParts = null;
         this.posY = 0;
         this.velY = 0;
         this.isGrounded = true;
@@ -467,6 +487,11 @@
         this.characterLabel = document.getElementById('characterLabel');
         this.activeBuffBar = document.getElementById('activeBuffBar');
         this.hoverboardBadge = document.getElementById('hoverboardBadge');
+        this.speedLines = document.getElementById('speedLines');
+        this.chaseBar = document.getElementById('chaseBar');
+        this.chaseText = document.getElementById('chaseText');
+        this.chaseLevel = 0;
+        this.chase = null;
 
         this.startOverlay = document.getElementById('startOverlay');
         this.pauseOverlay = document.getElementById('pauseOverlay');
@@ -486,12 +511,12 @@
 
       loadSessionData() {
         try {
-          const raw = sessionStorage.getItem('subway_arcade_data');
+          const raw = localStorage.getItem('subway_arcade_data') || sessionStorage.getItem('subway_arcade_data');
           if (raw) {
             const data = JSON.parse(raw);
             this.coinsWallet = data.coinsWallet || 0;
             this.highScore = data.highScore || 0;
-            this.selectedCharacter = data.selectedCharacter || 'custom_bot';
+            this.selectedCharacter = data.selectedCharacter || 'jake';
             this.selectedBoard = data.selectedBoard || 'standard';
             if (data.unlockedChars) {
               data.unlockedChars.forEach(id => {
@@ -519,6 +544,7 @@
             unlockedChars: CHARACTERS.filter(c => c.unlocked).map(c => c.id),
             unlockedBoards: BOARDS.filter(b => b.unlocked).map(b => b.id)
           };
+          localStorage.setItem('subway_arcade_data', JSON.stringify(payload));
           sessionStorage.setItem('subway_arcade_data', JSON.stringify(payload));
         } catch(e) {}
       }
@@ -538,6 +564,9 @@
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
         this.renderer.setSize(width, height);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.outputEncoding = THREE.sRGBEncoding;
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.toneMappingExposure = 1.15;
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.container.appendChild(this.renderer.domElement);
@@ -550,307 +579,81 @@
         this.dirLight.position.set(15, 25, 10);
         this.dirLight.castShadow = true;
         this.scene.add(this.dirLight);
+
+        const rim = new THREE.PointLight(0x22d3ee, 2.2, 35);
+        rim.position.set(-7, 5, -12); this.scene.add(rim);
+        const warm = new THREE.PointLight(0xff7a18, 1.8, 28);
+        warm.position.set(7, 4, -18); this.scene.add(warm);
+        this.buildChase();
       }
 
       buildPlayer() {
         const charData = CHARACTERS.find(c => c.id === this.selectedCharacter) || CHARACTERS[0];
         this.characterLabel.textContent = `RUNNER: ${charData.name.toUpperCase()}`;
+        if (this.player) this.scene.remove(this.player);
 
-        if (this.player) {
-          this.scene.remove(this.player);
-        }
+        const mat = (color, metal=0, rough=.55) => new THREE.MeshStandardMaterial({ color, metalness:metal, roughness:rough });
+        const skin = mat(0xf2b38f, 0, .65);
+        const hoodie = mat(charData.hoodie, 0, .42);
+        const accent = mat(charData.color, .25, .28);
+        const dark = mat(0x111827, .25, .38);
+        const white = mat(0xf8fafc, .05, .32);
 
         this.player = new THREE.Group();
-        this.playerParts = null;
+        this.player.userData.parts = {};
 
-        if (charData.id === 'custom_bot') {
-          const runner = new THREE.Group();
-          this.player.add(runner);
+        const torso = new THREE.Mesh(new THREE.CylinderGeometry(.48,.55,.92,12), hoodie);
+        torso.position.y=.98; torso.castShadow=true; this.player.add(torso);
+        const hood = new THREE.Mesh(new THREE.TorusGeometry(.34,.08,8,16,Math.PI), accent);
+        hood.rotation.x=Math.PI/2; hood.position.set(0,1.48,.02); this.player.add(hood);
 
-          const skinMat = new THREE.MeshStandardMaterial({ color: 0xc8794f, roughness: 0.8 });
-          const hairMat = new THREE.MeshStandardMaterial({ color: 0x351b12, roughness: 0.9 });
-          const hoodieMat = new THREE.MeshStandardMaterial({ color: 0xe5e7eb, roughness: 0.8 });
-          const vestMat = new THREE.MeshStandardMaterial({ color: 0x7fa7bd, roughness: 0.7 });
-          const shirtMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.8 });
-          const jeansMat = new THREE.MeshStandardMaterial({ color: 0x1e5a78, roughness: 0.8 });
-          const shoeMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.7 });
-          const shoeGreenMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.7 });
-          const shoeRedMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.7 });
-          const capMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.7 });
+        const head = new THREE.Mesh(new THREE.SphereGeometry(.36,18,14), skin);
+        head.position.y=1.72; head.castShadow=true; this.player.add(head);
+        const hair = new THREE.Mesh(new THREE.SphereGeometry(.37,16,10,0,Math.PI*2,0,Math.PI*.48), dark);
+        hair.position.set(0,1.84,-.01); this.player.add(hair);
+        const cap = new THREE.Mesh(new THREE.SphereGeometry(.39,16,8,0,Math.PI*2,0,Math.PI*.45), accent);
+        cap.position.set(0,1.96,.02); this.player.add(cap);
+        const visor = new THREE.Mesh(new THREE.BoxGeometry(.42,.06,.20), accent);
+        visor.position.set(0,1.91,.34); this.player.add(visor);
 
-          const box = (w, h, d, material, x = 0, y = 0, z = 0) => {
-            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
-            mesh.position.set(x, y, z);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            return mesh;
-          };
+        const eyeGeo=new THREE.SphereGeometry(.035,8,8);
+        [-.11,.11].forEach(x=>{const e=new THREE.Mesh(eyeGeo,dark);e.position.set(x,1.73,.33);this.player.add(e);});
+        const shoeGeo=new THREE.BoxGeometry(.34,.16,.55);
+        const legGeo=new THREE.CylinderGeometry(.14,.16,.68,10);
+        this.leftLeg=new THREE.Group(); this.leftLeg.position.set(-.21,.43,0); this.player.add(this.leftLeg);
+        this.rightLeg=new THREE.Group(); this.rightLeg.position.set(.21,.43,0); this.player.add(this.rightLeg);
+        [this.leftLeg,this.rightLeg].forEach(g=>{const l=new THREE.Mesh(legGeo,dark);l.position.y=-.32;l.castShadow=true;g.add(l);const sh=new THREE.Mesh(shoeGeo,white);sh.position.set(0,-.67,.10);sh.castShadow=true;g.add(sh);});
 
-          const sphere = (radius, material, x = 0, y = 0, z = 0) => {
-            const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 24, 16), material);
-            mesh.position.set(x, y, z);
-            mesh.castShadow = true;
-            return mesh;
-          };
+        const armGeo=new THREE.CylinderGeometry(.10,.13,.68,10);
+        this.leftArm=new THREE.Group(); this.rightArm=new THREE.Group();
+        this.leftArm.position.set(-.54,1.05,0); this.rightArm.position.set(.54,1.05,0);
+        [this.leftArm,this.rightArm].forEach((g,i)=>{g.rotation.z=(i?-.15:.15);const a=new THREE.Mesh(armGeo,hoodie);a.position.y=-.28;a.castShadow=true;g.add(a);const hand=new THREE.Mesh(new THREE.SphereGeometry(.12,10,8),skin);hand.position.y=-.64;g.add(hand);this.player.add(g);});
 
-          // Torso
-          const torso = new THREE.Group();
-          torso.position.y = 1.25;
-          runner.add(torso);
-
-          const hoodie = box(0.72, 0.85, 0.42, hoodieMat);
-          torso.add(hoodie);
-
-          const shirt = box(0.38, 0.25, 0.44, shirtMat);
-          shirt.position.y = 0.34;
-          torso.add(shirt);
-
-          const vestLeft = box(0.18, 0.62, 0.46, vestMat);
-          vestLeft.position.set(-0.27, 0.05, -0.02);
-          torso.add(vestLeft);
-
-          const vestRight = box(0.18, 0.62, 0.46, vestMat);
-          vestRight.position.set(0.27, 0.05, -0.02);
-          torso.add(vestRight);
-
-          // Head
-          const headGroup = new THREE.Group();
-          headGroup.position.y = 1.82;
-          runner.add(headGroup);
-
-          const head = sphere(0.35, skinMat);
-          head.scale.set(0.92, 1.08, 0.85);
-          headGroup.add(head);
-
-          const hair = sphere(0.36, hairMat);
-          hair.scale.set(0.95, 0.45, 0.85);
-          hair.position.y = 0.24;
-          headGroup.add(hair);
-
-          // Cap
-          const cap = new THREE.Mesh(
-            new THREE.SphereGeometry(0.39, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2),
-            capMat
-          );
-          cap.position.y = 0.32;
-          cap.scale.set(1.0, 0.45, 0.95);
-          cap.castShadow = true;
-          headGroup.add(cap);
-
-          const visor = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.06, 0.25), capMat);
-          visor.position.set(0, 0.27, -0.30);
-          visor.rotation.x = -0.12;
-          headGroup.add(visor);
-
-          // Eyes
-          const eyeWhite = new THREE.MeshStandardMaterial({ color: 0xffffff });
-          const eyeBlack = new THREE.MeshStandardMaterial({ color: 0x111111 });
-          [-0.13, 0.13].forEach(x => {
-            const eye = sphere(0.07, eyeWhite, x, 0, -0.31);
-            eye.scale.set(1, 1.2, 0.5);
-            headGroup.add(eye);
-
-            const pupil = sphere(0.035, eyeBlack, x, 0, -0.355);
-            headGroup.add(pupil);
-          });
-
-          // Arms
-          const leftArm = new THREE.Group();
-          leftArm.position.set(-0.48, 1.48, 0);
-          runner.add(leftArm);
-
-          const leftSleeve = box(0.22, 0.65, 0.24, hoodieMat);
-          leftSleeve.position.y = -0.30;
-          leftArm.add(leftSleeve);
-
-          const leftHand = sphere(0.13, skinMat);
-          leftHand.position.y = -0.66;
-          leftArm.add(leftHand);
-
-          const rightArm = new THREE.Group();
-          rightArm.position.set(0.48, 1.48, 0);
-          runner.add(rightArm);
-
-          const rightSleeve = box(0.22, 0.65, 0.24, hoodieMat);
-          rightSleeve.position.y = -0.30;
-          rightArm.add(rightSleeve);
-
-          const rightHand = sphere(0.13, skinMat);
-          rightHand.position.y = -0.66;
-          rightArm.add(rightHand);
-
-          // Legs
-          const leftLeg = new THREE.Group();
-          leftLeg.position.set(-0.20, 0.82, 0);
-          runner.add(leftLeg);
-
-          const leftJeans = box(0.28, 0.75, 0.30, jeansMat);
-          leftJeans.position.y = -0.38;
-          leftLeg.add(leftJeans);
-
-          const leftFoot = new THREE.Group();
-          leftFoot.position.set(0, -0.80, -0.08);
-          leftLeg.add(leftFoot);
-
-          const leftShoe = box(0.36, 0.18, 0.62, shoeMat);
-          leftShoe.position.z = -0.12;
-          leftFoot.add(leftShoe);
-
-          const leftGreen = box(0.38, 0.08, 0.28, shoeGreenMat);
-          leftGreen.position.set(0, 0.09, -0.15);
-          leftFoot.add(leftGreen);
-
-          const leftRed = box(0.39, 0.07, 0.18, shoeRedMat);
-          leftRed.position.set(0, 0.10, 0.12);
-          leftFoot.add(leftRed);
-
-          const rightLeg = new THREE.Group();
-          rightLeg.position.set(0.20, 0.82, 0);
-          runner.add(rightLeg);
-
-          const rightJeans = box(0.28, 0.75, 0.30, jeansMat);
-          rightJeans.position.y = -0.38;
-          rightLeg.add(rightJeans);
-
-          const rightFoot = new THREE.Group();
-          rightFoot.position.set(0, -0.80, -0.08);
-          rightLeg.add(rightFoot);
-
-          const rightShoe = box(0.36, 0.18, 0.62, shoeMat);
-          rightShoe.position.z = -0.12;
-          rightFoot.add(rightShoe);
-
-          const rightGreen = box(0.38, 0.08, 0.28, shoeGreenMat);
-          rightGreen.position.set(0, 0.09, -0.15);
-          rightFoot.add(rightGreen);
-
-          const rightRed = box(0.39, 0.07, 0.18, shoeRedMat);
-          rightRed.position.set(0, 0.10, 0.12);
-          rightFoot.add(rightRed);
-
-          this.playerParts = {
-            runner,
-            torso,
-            head: headGroup,
-            leftArm,
-            rightArm,
-            leftLeg,
-            rightLeg,
-            leftFoot,
-            rightFoot
-          };
-
-          runner.scale.set(1.05, 1.05, 1.05);
-          runner.position.y = 0.05;
-        } else {
-          const bodyGeo = new THREE.BoxGeometry(0.75, 0.9, 0.45);
-          const bodyMat = new THREE.MeshLambertMaterial({ color: charData.hoodie });
-          const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
-          bodyMesh.position.y = 0.85;
-          bodyMesh.castShadow = true;
-          this.player.add(bodyMesh);
-
-          const headGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-          const headMat = new THREE.MeshLambertMaterial({ color: 0xfde047 });
-          const headMesh = new THREE.Mesh(headGeo, headMat);
-          headMesh.position.y = 1.55;
-          headMesh.castShadow = true;
-          this.player.add(headMesh);
-
-          const capGeo = new THREE.BoxGeometry(0.55, 0.18, 0.65);
-          const capMat = new THREE.MeshLambertMaterial({ color: charData.color });
-          const capMesh = new THREE.Mesh(capGeo, capMat);
-          capMesh.position.set(0, 1.7, 0.05);
-          this.player.add(capMesh);
-
-          const legGeo = new THREE.BoxGeometry(0.26, 0.7, 0.3);
-          const legMat = new THREE.MeshLambertMaterial({ color: 0x1e293b });
-
-          this.leftLeg = new THREE.Mesh(legGeo, legMat);
-          this.leftLeg.position.set(-0.22, 0.35, 0);
-          this.leftLeg.castShadow = true;
-          this.player.add(this.leftLeg);
-
-          this.rightLeg = new THREE.Mesh(legGeo, legMat);
-          this.rightLeg.position.set(0.22, 0.35, 0);
-          this.rightLeg.castShadow = true;
-          this.player.add(this.rightLeg);
-        }
-
-        const boardData = BOARDS.find(b => b.id === this.selectedBoard) || BOARDS[0];
-        const boardGeo = new THREE.BoxGeometry(1.0, 0.1, 2.0);
-        const boardMat = new THREE.MeshStandardMaterial({ 
-          color: boardData.color, 
-          emissive: boardData.color, 
-          emissiveIntensity: 0.4,
-          roughness: 0.3 
-        });
-        this.boardMesh = new THREE.Mesh(boardGeo, boardMat);
-        this.boardMesh.position.set(0, -0.05, 0);
-        this.boardMesh.visible = false;
-        this.player.add(this.boardMesh);
-
-        this.player.position.set(0, 0, 0);
-        this.scene.add(this.player);
+        const boardData=BOARDS.find(b=>b.id===this.selectedBoard)||BOARDS[0];
+        const boardMat=new THREE.MeshStandardMaterial({color:boardData.color,emissive:boardData.color,emissiveIntensity:.65,metalness:.7,roughness:.2});
+        this.boardMesh=new THREE.Mesh(new THREE.BoxGeometry(1.05,.10,2.05),boardMat);
+        this.boardMesh.position.set(0,-.05,0); this.boardMesh.visible=false; this.player.add(this.boardMesh);
+        const wheelMat=mat(0x0f172a,.8,.2);
+        [-.38,.38].forEach(x=>{const w=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,.08,12),wheelMat);w.rotation.z=Math.PI/2;w.position.set(x,-.11,.45);this.boardMesh.add(w);});
+        this.player.position.set(0,0,0); this.scene.add(this.player);
       }
 
-      animateRunner(time) {
-        if (!this.playerParts) return;
-        const p = this.playerParts;
-
-        if (this.isSliding) {
-          this.slideRunner();
-          return;
-        }
-
-        if (!this.isGrounded) {
-          this.jumpRunner();
-          return;
-        }
-
-        const speed = 0.012;
-        const legSwing = Math.sin(time * speed) * 0.65;
-
-        p.runner.rotation.x = 0;
-        p.leftLeg.rotation.x = legSwing;
-        p.rightLeg.rotation.x = -legSwing;
-        p.leftArm.rotation.x = -legSwing * 0.8;
-        p.rightArm.rotation.x = legSwing * 0.8;
-
-        p.torso.position.y = 1.25 + Math.abs(Math.sin(time * speed * 2)) * 0.04;
-        p.head.rotation.z = Math.sin(time * speed) * 0.025;
-        p.runner.rotation.z = Math.sin(time * speed * 2) * 0.015;
-      }
-
-      jumpRunner() {
-        if (!this.playerParts) return;
-        const p = this.playerParts;
-        p.runner.rotation.x = 0;
-        p.runner.rotation.z = 0;
-        p.leftLeg.rotation.x = -0.45;
-        p.rightLeg.rotation.x = 0.45;
-        p.leftArm.rotation.x = 0.8;
-        p.rightArm.rotation.x = -0.8;
-      }
-
-      slideRunner() {
-        if (!this.playerParts) return;
-        const p = this.playerParts;
-        p.runner.rotation.x = -0.35;
-        p.leftArm.rotation.x = -0.7;
-        p.rightArm.rotation.x = -0.7;
-        p.leftLeg.rotation.x = 0.4;
-        p.rightLeg.rotation.x = 0.4;
-      }
-
-      stopSlideRunner() {
-        if (!this.playerParts) return;
-        const p = this.playerParts;
-        p.runner.rotation.x = 0;
-        p.leftArm.rotation.x = 0;
-        p.rightArm.rotation.x = 0;
-        p.leftLeg.rotation.x = 0;
-        p.rightLeg.rotation.x = 0;
+      buildChase() {
+        if (this.chase) this.scene.remove(this.chase);
+        this.chase = new THREE.Group();
+        const bodyMat=new THREE.MeshStandardMaterial({color:0x1e293b,roughness:.5});
+        const skinMat=new THREE.MeshStandardMaterial({color:0xd99a72,roughness:.65});
+        const red=new THREE.MeshStandardMaterial({color:0xef4444,emissive:0x7f1d1d,emissiveIntensity:.4});
+        const body=new THREE.Mesh(new THREE.CylinderGeometry(.42,.52,1.05,12),bodyMat); body.position.y=.8; body.castShadow=true; this.chase.add(body);
+        const head=new THREE.Mesh(new THREE.SphereGeometry(.34,16,12),skinMat); head.position.y=1.55; head.castShadow=true; this.chase.add(head);
+        const cap=new THREE.Mesh(new THREE.BoxGeometry(.72,.16,.45),red); cap.position.set(0,1.83,.02); this.chase.add(cap);
+        const dog=new THREE.Group(); dog.position.set(.75,.18,.55);
+        const dm=new THREE.MeshStandardMaterial({color:0x8b5a2b,roughness:.8});
+        const db=new THREE.Mesh(new THREE.SphereGeometry(.28,12,10),dm); db.scale.set(1,.8,1.25); dog.add(db);
+        const dh=new THREE.Mesh(new THREE.SphereGeometry(.22,12,10),dm); dh.position.set(0,.2,.28); dog.add(dh);
+        const ear=new THREE.Mesh(new THREE.SphereGeometry(.08,8,8),dm); [-.16,.16].forEach(x=>{const e=ear.clone();e.position.set(x,.28,.27);dog.add(e);});
+        this.chase.add(dog); this.chase.userData.dog=dog;
+        this.chase.position.set(0,0,3.8); this.scene.add(this.chase);
       }
 
       buildInitialTrack() {
@@ -1078,17 +881,17 @@
         this.isGrounded = true;
         this.isSliding = false;
         this.slideTimer = 0;
-        this.stopSlideRunner();
 
         this.distanceRun = 0;
         this.coinsCollectedThisRun = 0;
         this.currentSpeed = this.baseSpeed;
         this.scoreMultiplier = 1;
+        this.chaseLevel = 0;
         this.isGameOver = false;
         this.isPaused = false;
 
         this.boardActive = false;
-        if (this.boardMesh) this.boardMesh.visible = false;
+        this.boardMesh.visible = false;
         this.hoverboardBadge.classList.add('hidden');
         this.hoverboardBadge.classList.remove('flex');
 
@@ -1142,7 +945,6 @@
           this.velY = force;
           this.isGrounded = false;
           this.isSliding = false;
-          this.stopSlideRunner();
           sfx.jump();
         }
       }
@@ -1154,7 +956,6 @@
         }
         this.isSliding = true;
         this.slideTimer = 0.65;
-        this.slideRunner();
         sfx.slide();
       }
 
@@ -1162,7 +963,7 @@
         if (this.isPaused || this.isGameOver || !this.isPlaying) return;
         if (!this.boardActive) {
           this.boardActive = true;
-          if (this.boardMesh) this.boardMesh.visible = true;
+          this.boardMesh.visible = true;
           sfx.boardActive();
           this.hoverboardBadge.classList.remove('hidden');
           this.hoverboardBadge.classList.add('flex');
@@ -1203,7 +1004,7 @@
       handleCrash(reason = 'Crashed into Obstacle') {
         if (this.boardActive) {
           this.boardActive = false;
-          if (this.boardMesh) this.boardMesh.visible = false;
+          this.boardMesh.visible = false;
           this.hoverboardBadge.classList.add('hidden');
           sfx.boardBreak();
           sfx.vibrate(50);
@@ -1235,7 +1036,7 @@
         }, 300);
       }
 
-      update(delta, timestamp) {
+      update(delta) {
         if (!this.isPlaying || this.isPaused || this.isGameOver) return;
 
         this.currentSpeed = this.baseSpeed + Math.min(20, this.distanceRun * 0.012);
@@ -1262,32 +1063,25 @@
 
         this.player.position.y = this.posY;
 
-        if (this.isSliding) {
-          this.slideTimer -= delta;
-          if (this.slideTimer <= 0) {
-            this.isSliding = false;
-            this.stopSlideRunner();
-            if (!this.playerParts) {
-              this.player.scale.set(1.0, 1.0, 1.0);
-            }
-          } else if (!this.playerParts) {
-            this.player.scale.set(1.0, 0.45, 1.0);
-          }
-        } else if (!this.playerParts) {
-          this.player.scale.set(1.0, 1.0, 1.0);
+        const t = performance.now() * 0.001;
+        const runPhase = t * (8 + this.currentSpeed * .16);
+        if (!this.isSliding) {
+          const swing = Math.sin(runPhase) * (this.isGrounded ? .72 : .15);
+          this.leftLeg.rotation.x = swing; this.rightLeg.rotation.x = -swing;
+          if (this.leftArm && this.rightArm) { this.leftArm.rotation.x = -swing*.72; this.rightArm.rotation.x = swing*.72; }
+          this.player.rotation.z += ((this.targetX-this.player.position.x)*-.10 - this.player.rotation.z) * 10 * delta;
+          this.player.position.y += Math.sin(runPhase*2)*.025;
         }
 
-        if (this.playerParts) {
-          this.animateRunner(timestamp);
-        } else if (this.leftLeg && this.rightLeg) {
-          if (this.isGrounded && !this.isSliding) {
-            const runAngle = Math.sin(Date.now() * 0.015) * 0.6;
-            this.leftLeg.rotation.x = runAngle;
-            this.rightLeg.rotation.x = -runAngle;
-          } else {
-            this.leftLeg.rotation.x = 0;
-            this.rightLeg.rotation.x = 0;
+        if (this.isSliding) {
+          this.slideTimer -= delta;
+          this.player.scale.set(1.0, 0.45, 1.0);
+          if (this.slideTimer <= 0) {
+            this.isSliding = false;
+            this.player.scale.set(1.0, 1.0, 1.0);
           }
+        } else {
+          this.player.scale.set(1.0, 1.0, 1.0);
         }
 
         Object.keys(this.activeBuffs).forEach(k => {
@@ -1327,7 +1121,7 @@
 
           if (playerBBox.intersectsBox(obs.box)) {
             if (obs.type === 'high_barrier' && this.isSliding) {
-              // Dodged under barrier
+              // Dodged
             } else {
               let msg = 'Crashed into a Freight Train!';
               if (obs.type === 'low_barrier') msg = 'Tripped over Roadblock Barricade!';
@@ -1390,8 +1184,24 @@
 
         this.camera.position.x = this.player.position.x * 0.45;
         this.camera.position.y = 4.2 + (this.player.position.y * 0.3);
+        this.camera.lookAt(this.player.position.x * .15, 1.45 + this.player.position.y*.2, -7);
+        this.updateChase(delta);
+        if (this.speedLines) this.speedLines.style.opacity = Math.max(0, Math.min(1, (this.currentSpeed-this.baseSpeed)/16));
 
         this.updateHUD();
+      }
+
+      updateChase(delta) {
+        if (!this.chase) return;
+        const targetZ = 3.8 - Math.min(2.6, this.chaseLevel * .02);
+        this.chase.position.z += (targetZ - this.chase.position.z) * 2.5 * delta;
+        this.chase.position.x += (this.player.position.x - this.chase.position.x) * 1.8 * delta;
+        const bob=Math.sin(performance.now()*.012)*.035;
+        this.chase.position.y=bob;
+        if (this.chase.userData.dog) this.chase.userData.dog.rotation.y=Math.sin(performance.now()*.01)*.12;
+        this.chaseLevel=Math.min(100, this.distanceRun*.08);
+        if (this.chaseBar) this.chaseBar.style.width=this.chaseLevel+'%';
+        if (this.chaseText) this.chaseText.textContent=this.chaseLevel>75?'DANGER':this.chaseLevel>40?'HOT':'READY';
       }
 
       updateHUD() {
@@ -1679,10 +1489,10 @@
         });
       }
 
-      renderLoop(timestamp = 0) {
-        requestAnimationFrame((t) => this.renderLoop(t));
+      renderLoop() {
+        requestAnimationFrame(() => this.renderLoop());
         const delta = Math.min(0.1, this.clock.getDelta());
-        this.update(delta, timestamp);
+        this.update(delta);
         this.renderer.render(this.scene, this.camera);
       }
     }
